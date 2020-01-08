@@ -21,8 +21,8 @@ module Repp
         end
 
         def users(refresh = false)
-          @users = @web_client.users_list.members if refresh
-          @users ||= @web_client.users_list.members
+          @users = get_users if refresh
+          @users ||= get_users
         end
 
         def handle
@@ -81,6 +81,19 @@ module Repp
             end
           end
         end
+
+        private
+
+        def get_users
+          response = @web_client.users_list
+          members = response.members
+          while response.response_metadata.next_cursor != ''
+            response = @web_client.users_list(cursor: response.response_metadata.next_cursor)
+            members.concat(response.members)
+          end
+          members
+        end
+
       end
 
       class << self
